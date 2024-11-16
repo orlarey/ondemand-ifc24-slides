@@ -20,7 +20,7 @@ toc: false
 
 ## 2009: Semantics of multirate Faust
 
-The monorate, always active, model is simple, but not always enough.
+The always-active monorate model is simple, but not always sufficient.
 
 ![](images/sem-faust-mr.png)
 
@@ -30,8 +30,8 @@ The monorate, always active, model is simple, but not always enough.
 ![](images/enable.png)
 
 - 2015: `mute(x,y)` like `x*y` but the computation of `x` can be suspend when `y` is 0.
-- later `mute` renamed in `enable` and variant `control` added
-- later extended to `-vec` mode
+- Then renamed `mute` to `enable`, added a `control` variant.
+- 2021: extended to `-vec` mode.
 
 ## 2020: Ondemand
 
@@ -59,13 +59,12 @@ Provide _Multirate_ and _Call by Need_ computation, while preserving _efficiency
 ### Call by Need
 
 - Pay for what you use
-- Controling when computations are done
-- Music Composition style computation
+- Controlling when computations occur
+- Music composition-style computation
 
 ## Ondemand Semantics
 
-
-`ondemand(C)` is `C` applied to downsampled input signals, the resulting signals being upsampled.
+`ondemand(C)` is `C` applied to downsampled input signals ($S_i<*H$), the resulting signals being upsampled ($Y_j*>H$). Here $H$ is the clock signal.
 
 ![](images/ondemand-schema.png)
 
@@ -84,7 +83,7 @@ $$
 
 ## Downsampling
 
-$S_i<*H$ is the downsampling of $S_i$, based on the clock signal $H$. 
+$S_i<*H$ is the downsampling of $S_i$, based on the clock signal $H$. $t$ is the time observed outside `C` and $t'$ inside.
 
 \begin{table}[!ht]
 \centering
@@ -115,7 +114,7 @@ $$
 
 ## Upsampling
 
-$S_i*>H$ is the upsampling of $S_i$ according to clock signal $H$. 
+$S_i*>H$ is the upsampling of $S_i$ according to clock signal $H$.  $t$ is the time observed outside `C` and $t'$ inside.
 
 \begin{table}[!ht]
 \centering 
@@ -145,7 +144,7 @@ $$
 
 ## Example 1: Sample and Hold
 
-_Sample and Hold_ is simply the ondemand version of the identity function.
+`ondemand` simplifies the implementation of the _Sample and Hold_ functionality. It is directly expressed as the `ondemand` version of the identity function `_`.
 
 ### 1: without ondemand
 
@@ -214,6 +213,7 @@ process = beat(100) :  ondemand(no.noise);
 
 ## Example 2: Generated code, without ondemand
 
+### Code generated for `beat(100), no.noise : SH`
 ```C
 for (int i=0; i<count; i++) {
     iVec0SI[0] = ((iVec0SI[1] + 1) % 100);
@@ -231,6 +231,7 @@ for (int i=0; i<count; i++) {
 
 ## Example 2: Generated code, with ondemand
 
+### Code generated for `beat(100) :  ondemand(no.noise)`
 ```C
 for (int i=0; i<count; i++) {
     iVec0SI[0] = ((iVec0SI[1] + 1) % 100);
@@ -252,7 +253,7 @@ for (int i=0; i<count; i++) {
 
 ### `oversampling(C)`
 
-Circuit `C` is run $N$ times faster than the surrounding circuit. The value of sampling frequency, as seen from within `C`, is adapted accordingly.
+Circuit `C` is run $N$ times faster than the surrounding circuit. The _sampling frequency_ observed by `C`, is adjusted proportionally to the oversampling factor.
 
 ## Undersampling
 
@@ -260,13 +261,13 @@ Circuit `C` is run $N$ times faster than the surrounding circuit. The value of s
 
 ### `undersampling(C)`
 
-Circuit `C` is run $N$ times slower than the surrounding circuit. The value of sampling frequency, as seen from within `C`, is adapted accordingly.
+Circuit `C` is run $N$ times slower than the surrounding circuit. The _sampling frequency_ observed by `C`, is adjusted proportionally to the undersampling factor.
 
 ## Switch
 
 ![](images/switch.png)
 
-### `swith(C0,C1,...,Ck)`
+### `switch(C0,C1,...,Ck)`
 
 Activate one of the `Ci` circuits according to the control input `c`. All the circuits must have the same type $n->m$.
 
@@ -276,18 +277,18 @@ Activate one of the `Ci` circuits according to the control input `c`. All the ci
 
 ### `interleave(C)`
 
-Assuming `C` is of type $n->n$, `interleave(C)` will distribute the incomming samples to each of the $n$ inputs of `C`, the run `C` once, and then interleave each output value to the output signal.
+Assuming `C` is of type $n->n$, `interleave(C)` will distribute the incoming samples to each of the $n$ inputs of `C`, then run `C` once, and then interleave each output value to the output signal.
 
 ## Conclusion
 
-By allowing to control precisely when computations are done, Ondemand and its variants will facilitate :
+### Ondemand and its variants offer:
 
 - Frequency domain computation
-- Oversampling and Undersampling
-- Composition style _Call by Need_ computation
+- Oversampling and undersampling
+- Composition-style, "Call by Need" computation
 
-while
+### While maintaining:
 
-- Increasing the efficiency of the code
-- Preserving the simple semantics of Faust
-- Being circuit primitives, in the spirit of Faust
+- Increased code efficiency
+- Simple semantics in Faust
+- Native integration as circuit primitives.
