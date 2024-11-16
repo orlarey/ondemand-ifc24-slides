@@ -1,7 +1,4 @@
-slides.pdf : slides.md examples/*.dsp
-	make -C examples
-	pandoc --to=beamer --standalone --output=slides.pdf slides.md
+build: slides.pdf 
 
-clean:
-	rm -f slides.pdf
-	make -C examples clean
+slides.pdf : slides.md Makefile
+	pandoc -t beamer --template=custom-template.tex -o slides.pdf slides.md
