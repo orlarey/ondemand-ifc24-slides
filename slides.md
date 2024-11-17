@@ -30,7 +30,7 @@ The always-active monorate model is simple, but not always sufficient.
 ![](images/enable.png)
 
 - 2015: `mute(x,y)` like `x*y` but the computation of `x` can be suspend when `y` is 0.
-- Then renamed `mute` to `enable`, added a `control` variant.
+- Later, `mute`  was renamed to `enable`, and a `control` variant was added.
 - 2021: extended to `-vec` mode.
 
 ## 2020: Ondemand
@@ -48,7 +48,7 @@ The always-active monorate model is simple, but not always sufficient.
 
 ### Objective
 
-Provide _Multirate_ and _Call by Need_ computation, while preserving _efficiency_ and _simple semantics_
+Provide _multirate_ and _call-by-need_ computation while preserving _efficiency_ and _simple semantics_
 
 ### Multirate Computation
 
@@ -56,15 +56,26 @@ Provide _Multirate_ and _Call by Need_ computation, while preserving _efficiency
 - Upsampling
 - Downsampling
 
-### Call by Need
+### call-by-need
 
 - Pay for what you use
 - Controlling when computations occur
 - Music composition-style computation
 
+
+## call-by-need strategy
+
+![](images/ondemand-back-prop.png)
+
+### Computations are only performed when explicitly required
+
+- The demand (red arrow) is propagated backwards, starting from the outputs and moving towards the inputs.
+- In response,  the computed values (green arrows) are propagated forwards, moving from the inputs to the outputs.
+- The output values remain constant until the next demand.
+
 ## Ondemand Semantics
 
-`ondemand(C)` is `C` applied to downsampled input signals ($S_i<*H$), the resulting signals being upsampled ($Y_j*>H$). Here $H$ is the clock signal.
+`ondemand(C)` applies `C` to downsampled input signals ($S_i<*H$), producing upsampled results ($Y_j*>H$). Here, $H$ is the clock signal.
 
 ![](images/ondemand-schema.png)
 
@@ -83,7 +94,7 @@ $$
 
 ## Downsampling
 
-$S_i<*H$ is the downsampling of $S_i$, based on the clock signal $H$. $t$ is the time observed outside `C` and $t'$ inside.
+The downsampled $S_i<*H$ is computed from $S_i$, based on the clock signal $H$. $t$ is the time observed outside `C`, and $t'$ inside.
 
 \begin{table}[!ht]
 \centering
@@ -91,11 +102,11 @@ $S_i<*H$ is the downsampling of $S_i$, based on the clock signal $H$. $t$ is the
 \hline
 $t$ & $S_i$  & $H$   & $S_i<*H$  & $\down{H}$ & $t'$ \\ \hline
 0   &  a     & 1     & a         & 0          & 0   \\
-1   &  b     & 0     &           &            &     \\
-2   &  c     & 0     &           &            &     \\
+1   &  b     & 0     & .         & .          & .   \\
+2   &  c     & 0     & .         & .          & .   \\
 3   &  d     & 1     & d         & 3          & 1   \\
 4   &  f     & 1     & f         & 4          & 2   \\
-5   &  g     & 0     &           &            &     \\ \hline
+5   &  g     & 0     & .         & .          & .   \\ \hline
 \end{tabular}
 \caption{Example of downsampling}
 \label{tab:downsampling}
@@ -114,7 +125,7 @@ $$
 
 ## Upsampling
 
-$S_i*>H$ is the upsampling of $S_i$ according to clock signal $H$.  $t$ is the time observed outside `C` and $t'$ inside.
+$S_i*>H$ is the upsampling of $S_i$ according to clock signal $H$.  $t$ is the time observed outside `C`, and $t'$ inside.
 
 \begin{table}[!ht]
 \centering 
@@ -124,9 +135,9 @@ $t'$ & $S_i$ & $H$   & $S_i*>H$  & $\up{H}$ &$t$  \\ \hline
 0    & a     & 1     & a         & 0        & 0 \\
 1    & d     & 0     & a         & 0        & 1 \\
 2    & f     & 0     & a         & 0        & 2 \\
-     &       & 1     & d         & 1        & 3 \\
-     &       & 1     & f         & 2        & 4 \\
-     &       & 0     & f         & 2        & 5 \\ \hline
+.    & .     & 1     & d         & 1        & 3 \\
+.    & .     & 1     & f         & 2        & 4 \\
+.    & .     & 0     & f         & 2        & 5 \\ \hline
 \end{tabular}
 \caption{Example of upsampling}
 \label{tab:upsampling}
@@ -144,7 +155,7 @@ $$
 
 ## Example 1: Sample and Hold
 
-`ondemand` simplifies the implementation of the _Sample and Hold_ functionality. It is directly expressed as the `ondemand` version of the identity function `_`.
+`ondemand` simplifies the implementation of a _Sample and Hold_ (SH)circuit. It is directly expressed as the `ondemand` version of the identity function `_`.
 
 ### 1: without ondemand
 
@@ -277,18 +288,22 @@ Activate one of the `Ci` circuits according to the control input `c`. All the ci
 
 ### `interleave(C)`
 
-Assuming `C` is of type $n->n$, `interleave(C)` will distribute the incoming samples to each of the $n$ inputs of `C`, then run `C` once, and then interleave each output value to the output signal.
+Assuming `C` is of type $n->n$, `interleave(C)` is of type $1->1$ and operates as follows:
+
+- The incoming samples are distributed sequentially to each of the $n$ inputs of `C`,
+- `C` is then executed once, producing $n$ output values.
+- These $n$ output values are interleaved back into a single output signal.
 
 ## Conclusion
 
-### Ondemand and its variants offer:
+### Ondemand and its variants introduce new perspectives
 
 - Frequency domain computation
 - Oversampling and undersampling
-- Composition-style, "Call by Need" computation
+- Composition-style, call-by-need computation
 
-### While maintaining:
+### While maintaining
 
-- Increased code efficiency
-- Simple semantics in Faust
+- Code efficiency
+- Simple semantics
 - Native integration as circuit primitives.
