@@ -205,7 +205,7 @@ for (int i=0; i<count; i++) {
 ### Faust code
 
 ```C
-process = beat(100), no.noise : SH;
+process = ba.beat(100), no.noise : SH;
 ```
 
 
@@ -218,13 +218,13 @@ process = beat(100), no.noise : SH;
 ### Faust code
 
 ```C
-process = beat(100) :  ondemand(no.noise);
+process = ba.beat(100) : ondemand(no.noise);
 ```
 
 
 ## Example 2: Generated code, without ondemand
 
-### Code generated for `beat(100), no.noise : SH`
+### Code generated for `ba.beat(100), no.noise : SH`
 ```C
 for (int i=0; i<count; i++) {
     iVec0SI[0] = ((iVec0SI[1] + 1) % 100);
@@ -242,7 +242,7 @@ for (int i=0; i<count; i++) {
 
 ## Example 2: Generated code, with ondemand
 
-### Code generated for `beat(100) :  ondemand(no.noise)`
+### Code generated for `ba.beat(100) : ondemand(no.noise)`
 ```C
 for (int i=0; i<count; i++) {
     iVec0SI[0] = ((iVec0SI[1] + 1) % 100);
