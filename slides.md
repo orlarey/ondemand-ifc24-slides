@@ -2,7 +2,7 @@
 author: Yann Orlarey, Stéphane Letz
 title: The Future of Faust
 subtitle: Ondemand and Co.
-institute: EMERAUDE
+institute: EMERAUDE (INRIA/INSA/GRAME)
 theme: "metropolis"
 colortheme: "crane"
 fontsize: 10pt
