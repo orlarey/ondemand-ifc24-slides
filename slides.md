@@ -307,3 +307,49 @@ Assuming `C` is of type $n->n$, `interleave(C)` is of type $1->1$ and operates a
 - Code efficiency
 - Simple semantics
 - Native integration as circuit primitives.
+
+# Additional Examples
+
+## Euclidian Rythms
+
+```faust
+euclidian(n) = vgroup("%n.EUCLID", er(pulses,steps) 
+	with {
+		// UI: pulses < steps
+		steps = vslider("steps[style:knob]", 16, 2, 16, 1)+0.5:int;
+		pulses = vslider("pulses[style:knob]", 1, 1, 16, 1)+0.5:int : min(steps-1);
+
+		// Implementation
+		er(B,P,C) = 
+            C * ondemand (
+                (+(1) : %(P)) ~ _ 
+                : *(B) 
+                : %(P) 
+                : decr
+               )(upfront(C)); 
+		decr(x) = x < x';
+		upfront(x) = x > x';
+	}
+);
+```
+
+## Loop
+
+```faust
+key(n) = vgroup("%n.KEY", 
+        trig : ondemand(irnd(k1,k2):loop(rn,ln):ba.midikey2hz) )
+with {  random = +(12345) ~ *(1103515245);
+		noise = random / 2147483647;
+		irnd(x,y) = x+(noise+1)/2*(y-x);
+		upfront(x) = x>x';
+		loop(n,m) = select2(every(n)|for(m)) ~ @(m-1)  
+        with { every(n) = ((+(1):%(n))~_)' == 0; 
+			   for(n) = 1-1@n; };
+    	k1 = vslider("[1]key[style:knob]", 60, 0, 127, 1);
+		k2 = k1+vslider("[2]delta[style:knob]", 0, 0, 24, 1);
+		ln = vslider("[3]len[style:knob]", 3, 2, 64, 1);
+		rn = vslider("[4]renew[style:knob]", 11, 2, 127, 1);
+		trig = button("[5]trig") : upfront;
+	};
+
+```
